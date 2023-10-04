@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean, //adding showgraph property
 }
 
 /**
@@ -22,6 +23,7 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      showGraph: false, //to make initial state of the graph as hidden
     };
   }
 
@@ -29,7 +31,10 @@ class App extends Component<{}, IState> {
    * Render Graph react component with state.data parse as property data
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    //adding conditional statement to render graph only after user clicks start streaming data
+    if(this.state.showGraph) {
+        return (<Graph data={this.state.data}/>)
+    }
   }
 
   /**
