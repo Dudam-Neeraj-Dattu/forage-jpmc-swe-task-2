@@ -1,0 +1,260 @@
+From 3022e1f02670f8336f457078532f98c50f77496e Mon Sep 17 00:00:00 2001
+From: Joe Ferrer <joe@theforage.com>
+Date: Wed, 1 Mar 2023 00:45:20 +1100
+Subject: [PATCH 1/7] Move python files to datafeed dir
+
+---
+ requirements.txt => datafeed/requirements.txt | 0
+ server.py => datafeed/server3.py              | 0
+ datafeed/test.csv                             | 0
+ 3 files changed, 0 insertions(+), 0 deletions(-)
+ rename requirements.txt => datafeed/requirements.txt (100%)
+ rename server.py => datafeed/server3.py (100%)
+ create mode 100644 datafeed/test.csv
+
+diff --git a/requirements.txt b/datafeed/requirements.txt
+similarity index 100%
+rename from requirements.txt
+rename to datafeed/requirements.txt
+diff --git a/server.py b/datafeed/server3.py
+similarity index 100%
+rename from server.py
+rename to datafeed/server3.py
+diff --git a/datafeed/test.csv b/datafeed/test.csv
+new file mode 100644
+index 0000000..e69de29
+-- 
+2.42.0.windows.2
+
+
+From e0b5667ca10de34d8537701ffd6333f9e36fd606 Mon Sep 17 00:00:00 2001
+From: Neeraj Dattu Dudam <dudamdattu@gmail.com>
+Date: Wed, 4 Oct 2023 21:54:11 +0530
+Subject: [PATCH 2/7] added showgraph property
+
+---
+ src/App.tsx | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/App.tsx b/src/App.tsx
+index 0728518..4ddd2a0 100755
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -8,6 +8,7 @@ import './App.css';
+  */
+ interface IState {
+   data: ServerRespond[],
++  showGraph: boolean, //adding showgraph property
+ }
+ 
+ /**
+@@ -22,6 +23,7 @@ class App extends Component<{}, IState> {
+       // data saves the server responds.
+       // We use this state to parse data down to the child element (Graph) as element property
+       data: [],
++      showGraph: false, //to make initial state of the graph as hidden
+     };
+   }
+ 
+@@ -29,7 +31,10 @@ class App extends Component<{}, IState> {
+    * Render Graph react component with state.data parse as property data
+    */
+   renderGraph() {
+-    return (<Graph data={this.state.data}/>)
++    //adding conditional statement to render graph only after user clicks start streaming data
++    if(this.state.showGraph) {
++        return (<Graph data={this.state.data}/>)
++    }
+   }
+ 
+   /**
+-- 
+2.42.0.windows.2
+
+
+From f842b6b31ffc128259aa30d51fc75be12be856ff Mon Sep 17 00:00:00 2001
+From: Neeraj Dattu Dudam <dudamdattu@gmail.com>
+Date: Wed, 4 Oct 2023 22:00:32 +0530
+Subject: [PATCH 3/7] made to graph to fetch data automatically in intervals of
+ time
+
+---
+ src/App.tsx | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/src/App.tsx b/src/App.tsx
+index 4ddd2a0..7aeb986 100755
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -41,11 +41,22 @@ class App extends Component<{}, IState> {
+    * Get new data from server and update the state with the new data
+    */
+   getDataFromServer() {
+-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
+-      // Update the state by creating a new array of data that consists of
+-      // Previous data in the state and the new data from server
+-      this.setState({ data: [...this.state.data, ...serverResponds] });
+-    });
++    //making data to fetch in certain intervals of time automatically
++    let x = 0;
++    const interval = setInterval{() => {
++        DataStreamer.getData((serverResponds: ServerRespond[]) => {
++            // Update the state by creating a new array of data that consists of
++            // Previous data in the state and the new data from server
++            this.setState({
++                data: serverResponds,
++                showGraph: true,
++            });
++        });
++        x++;
++        if(x > 1000) {
++            clearInterval(interval);
++        }
++    }, 100);
+   }
+ 
+   /**
+-- 
+2.42.0.windows.2
+
+
+From 42d2be7567673f8afa81ff1365f1464a0a53859a Mon Sep 17 00:00:00 2001
+From: Neeraj Dattu Dudam <dudamdattu@gmail.com>
+Date: Wed, 4 Oct 2023 22:13:30 +0530
+Subject: [PATCH 4/7] made to graph to fetch data automatically in intervals of
+ time
+
+---
+ src/App.tsx | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/src/App.tsx b/src/App.tsx
+index 7aeb986..10a932f 100755
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -41,21 +41,20 @@ class App extends Component<{}, IState> {
+    * Get new data from server and update the state with the new data
+    */
+   getDataFromServer() {
+-    //making data to fetch in certain intervals of time automatically
+     let x = 0;
+-    const interval = setInterval{() => {
+-        DataStreamer.getData((serverResponds: ServerRespond[]) => {
++    const interval = setInterval(() => {
++       DataStreamer.getData((serverResponds: ServerRespond[]) => {
+             // Update the state by creating a new array of data that consists of
+             // Previous data in the state and the new data from server
+             this.setState({
+                 data: serverResponds,
+                 showGraph: true,
+             });
+-        });
+-        x++;
+-        if(x > 1000) {
+-            clearInterval(interval);
+-        }
++       });
++       x++;
++       if(x > 1000) {
++        clearInterval(interval);
++       }
+     }, 100);
+   }
+ 
+-- 
+2.42.0.windows.2
+
+
+From 8c4dc6cdfdf05589bae13125fa8f0c781d4ec3df Mon Sep 17 00:00:00 2001
+From: Neeraj Dattu Dudam <dudamdattu@gmail.com>
+Date: Wed, 4 Oct 2023 22:15:22 +0530
+Subject: [PATCH 5/7] making perspective viewer element as HTML element
+
+---
+ src/Graph.tsx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Graph.tsx b/src/Graph.tsx
+index 3b2a7da..cbbb96c 100644
+--- a/src/Graph.tsx
++++ b/src/Graph.tsx
+@@ -14,7 +14,7 @@ interface IProps {
+  * Perspective library adds load to HTMLElement prototype.
+  * This interface acts as a wrapper for Typescript compiler.
+  */
+-interface PerspectiveViewerElement {
++interface PerspectiveViewerElement extends HTMLElement{ //making it to behave like an HTML element
+   load: (table: Table) => void,
+ }
+ 
+-- 
+2.42.0.windows.2
+
+
+From 7246b5b219c71b95934b611f6b9f5cd70525143e Mon Sep 17 00:00:00 2001
+From: Neeraj Dattu Dudam <dudamdattu@gmail.com>
+Date: Wed, 4 Oct 2023 22:23:04 +0530
+Subject: [PATCH 6/7] adding attributes for the graph
+
+---
+ src/Graph.tsx | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/src/Graph.tsx b/src/Graph.tsx
+index cbbb96c..fff3039 100644
+--- a/src/Graph.tsx
++++ b/src/Graph.tsx
+@@ -32,7 +32,7 @@ class Graph extends Component<IProps, {}> {
+ 
+   componentDidMount() {
+     // Get element to attach the table from the DOM.
+-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
++    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
+ 
+     const schema = {
+       stock: 'string',
+@@ -49,6 +49,15 @@ class Graph extends Component<IProps, {}> {
+ 
+       // Add more Perspective configurations here.
+       elem.load(this.table);
++      elem.setAttribute('view', 'y_line');
++      elem.setAttribute('column-pivots', '["timestamp"]');
++      elem.setAttribute('row-pivots', '["timestamp"]');
++      elem.setAttribute('columns', '["top_ask_price"]');
++      elem.setAttribute('aggregates', `
++        {"stock" : "distinct count",
++         "top_ask_price" : "avg",
++         "top_bid_price" : "avg",
++         "timestamp" : "distinct count"}`);
+     }
+   }
+ 
+-- 
+2.42.0.windows.2
+
+
+From c39f7ab4573d60eeeed39dee37d42b9888164e3f Mon Sep 17 00:00:00 2001
+From: Neeraj Dattu Dudam <dudamdattu@gmail.com>
+Date: Wed, 4 Oct 2023 22:25:19 +0530
+Subject: [PATCH 7/7] correcting the column-pivots from timestamp to stock
+
+---
+ src/Graph.tsx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/Graph.tsx b/src/Graph.tsx
+index fff3039..a446621 100644
+--- a/src/Graph.tsx
++++ b/src/Graph.tsx
+@@ -50,7 +50,7 @@ class Graph extends Component<IProps, {}> {
+       // Add more Perspective configurations here.
+       elem.load(this.table);
+       elem.setAttribute('view', 'y_line');
+-      elem.setAttribute('column-pivots', '["timestamp"]');
++      elem.setAttribute('column-pivots', '["stock"]');
+       elem.setAttribute('row-pivots', '["timestamp"]');
+       elem.setAttribute('columns', '["top_ask_price"]');
+       elem.setAttribute('aggregates', `
+-- 
+2.42.0.windows.2
+
